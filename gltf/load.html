@@ -15,6 +15,19 @@
   </script>
 </head>
 <body>
+  <div style="position: absolute; top: 20px; left: 20px; z-index: 100; text-align: center; background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 5px;">
+    <div style="width: 200px; margin: 0 auto;">Sun Control</div>
+    <button onclick="speedUp()">Speed Up</button>
+    <button onclick="slowDown()">Slow Down</button>
+    <button id="pause-sun" onclick="toggleSunMovement()" hidden>Pause</button>
+    <button id="resume-sun" onclick="toggleSunMovement()">Resume</button>
+    <button onclick="resetSun()">Reset</button>
+  </div>
+  <div style="position: absolute; top: 80px; left: 20px; z-index: 100; text-align: center; background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 5px;">
+    <div style="width: 200px; margin: 0 auto;">Grid Control</div>
+    <button id="show-grid" onclick="toggleGrid()">Show Grid</button>
+    <button id="hide-grid" onclick="toggleGrid()" hidden>Hide Grid</button>
+  </div>
   <div id="progress-container">
     <div id="progress">LOADING 0/100</div>
   </div>
@@ -24,7 +37,6 @@
       <p>Rumah Baduy is a traditional house of the Baduy people, an indigenous community living in the mountainous region of Banten, Indonesia. The houses are simple, constructed using natural materials like bamboo, wood, and palm leaves, and are designed to blend harmoniously with the surrounding environment. The structure typically features a raised platform to protect from flooding and pests, with a thatched roof and open, airy interiors. The design reflects the Baduy's values of simplicity, sustainability, and their strong connection to nature and their cultural heritage.</p>
     </div>
   </div>
-  <button id="toggle-lighting">Toggle Day/Night Mode</button>
   <script type="module" src="./load.js"></script>
 </body>
 </html>
