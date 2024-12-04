@@ -1,42 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>House Testing</title>
-  <link rel="stylesheet" href="load.css">
-  <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@v0.153.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@v0.153.0/examples/jsm/"
-      }
-    }
-  </script>
+<html>
+<head>    
+    <!-- Add your original script imports here -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.159.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.159.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="load.js"></script>
+    <script src="https://cdn.skypack.dev/gsap"></script>
+    <link rel="stylesheet" href="load.css">
 </head>
 <body>
-  <div style="position: absolute; top: 20px; left: 20px; z-index: 100; text-align: center; background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 5px;">
-    <div style="width: 200px; margin: 0 auto;">Sun Control</div>
-    <button onclick="speedUp()">Speed Up</button>
-    <button onclick="slowDown()">Slow Down</button>
-    <button id="pause-sun" onclick="toggleSunMovement()" hidden>Pause</button>
-    <button id="resume-sun" onclick="toggleSunMovement()">Resume</button>
-    <button onclick="resetSun()">Reset</button>
-  </div>
-  <div style="position: absolute; top: 80px; left: 20px; z-index: 100; text-align: center; background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 5px;">
-    <div style="width: 200px; margin: 0 auto;">Grid Control</div>
-    <button id="show-grid" onclick="toggleGrid()">Show Grid</button>
-    <button id="hide-grid" onclick="toggleGrid()" hidden>Hide Grid</button>
-  </div>
-  <div id="progress-container">
-    <div id="progress">LOADING 0/100</div>
-  </div>
-  <div id="overlay">
-    <div id="overlay-content">
-      <h1>Rumah Baduy</h1>
-      <p>Rumah Baduy is a traditional house of the Baduy people, an indigenous community living in the mountainous region of Banten, Indonesia. The houses are simple, constructed using natural materials like bamboo, wood, and palm leaves, and are designed to blend harmoniously with the surrounding environment. The structure typically features a raised platform to protect from flooding and pests, with a thatched roof and open, airy interiors. The design reflects the Baduy's values of simplicity, sustainability, and their strong connection to nature and their cultural heritage.</p>
+    <!-- Progress container -->
+    <div id="progress-container">
+        <div id="progress">LOADING 0/100</div>
     </div>
-  </div>
-  <script type="module" src="./load.js"></script>
+
+    <!-- Sidebar toggle button -->
+    <button id="toggle-sidebar" onclick="toggleSidebar()">&#9664;</button>
+
+    <!-- Sidebar content -->
+    <div id="sidebar">
+        <div class="control-section">
+            <h2>Sun Control</h2>
+            <div class="control-buttons">
+                <button class="control-button" onclick="speedUp()">Speed Up</button>
+                <button class="control-button" onclick="slowDown()">Slow Down</button>
+                <button class="control-button" id="pause-sun" onclick="toggleSunMovement()" hidden>Pause</button>
+                <button class="control-button" id="resume-sun" onclick="toggleSunMovement()">Resume</button>
+                <button class="control-button" onclick="resetSun()">Reset</button>
+            </div>
+        </div>
+
+        <div class="control-section">
+          <h2>Grid Control</h2>
+          <div class="control-buttons">
+            <button class="control-button" id="show-grid" onclick="toggleGrid()">Show Grid</button>
+            <button class="control-button" id="hide-grid" onclick="toggleGrid()" hidden>Hide Grid</button>
+          </div>
+        </div>
+
+        <!-- <div class="control-section">
+          <h2>Camera Control</h2>
+          <div class="control-buttons">
+            <button id="toggle-camera-mode" style="position: absolute; top: 10px; right: 10px;">Switch to Orb Camera</button>
+          </div>
+        </div> -->
+
+        <div id="info-section">
+            <h1>Rumah Baduy</h1>
+            <p>
+              Rumah Baduy adalah rumah tradisional suku Baduy, sebuah komunitas adat yang tinggal di daerah pegunungan Banten, Indonesia. Rumah-rumah ini sederhana, dibangun menggunakan bahan alami seperti bambu, kayu, dan daun palem, serta dirancang agar selaras dengan lingkungan sekitarnya.
+            </p>
+            <p>
+              Strukturnya biasanya memiliki panggung yang ditinggikan untuk melindungi dari banjir dan hama, dengan atap jerami serta interior yang terbuka dan lapang. Desainnya mencerminkan nilai-nilai kesederhanaan, keberlanjutan, serta hubungan kuat suku Baduy dengan alam dan warisan budaya mereka.
+            </p>
+        </div>
+    </div>
 </body>
 </html>

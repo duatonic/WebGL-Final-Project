@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
+import gsap from "https://cdn.skypack.dev/gsap";
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -27,7 +28,7 @@ gridHelper.visible = false; // Hide the grid by default
 axesHelper.visible = false; // Hide the axes by default
 // End of Grid Visualization
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 1000);
 camera.position.set(-5, 1.5, 2);
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -35,6 +36,10 @@ controls.enableDamping = true;
 controls.enablePan = false;
 controls.minDistance = 5;
 controls.maxDistance = 20;
+
+const targetPoint = new THREE.Vector3(0, 0.4, 0);
+controls.target.copy(targetPoint);
+controls.update();
 
 const dawnColor = new THREE.Color(0xffcc99); // Warm dawn/sunset color
 const dayColor = new THREE.Color(0x87ceeb); // Bright blue daytime color
@@ -55,11 +60,6 @@ scene.add(moonLight);
 // Ambient light
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Add ambient light with initial intensity
 scene.add(ambientLight);
-
-// Function to show the overlay
-function showOverlay() {
-  document.getElementById('overlay').style.display = 'flex';
-}
 
 const groundTexture = new THREE.TextureLoader().load('./textures/ground-plane.png', function(texture) {
   texture.wrapS = THREE.RepeatWrapping;
@@ -93,7 +93,6 @@ loader.load('scene1.gltf', (gltf) => {
   scene.add(mesh);
 
   document.getElementById('progress-container').style.display = 'none';
-  showOverlay(); // Show the overlay after the load is completed
 }, (xhr) => {
   document.getElementById('progress').innerHTML = `LOADING ${Math.max(xhr.loaded / xhr.total, 1) * 100}/100`;
 }, (error) => {
@@ -105,6 +104,64 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// // Create white orbs
+// const orbMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+// const orbGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+// const orbs = [];
+
+// const orbPositions = [
+//   new THREE.Vector3(2, 1, -3),
+//   new THREE.Vector3(-3, 0.5, 1),
+//   new THREE.Vector3(1, 1.5, 4),
+//   new THREE.Vector3(-2, 0.5, -3)
+// ];
+
+// orbPositions.forEach(pos => {
+//   const orb = new THREE.Mesh(orbGeometry, orbMaterial);
+//   orb.position.copy(pos);
+//   scene.add(orb);
+//   orbs.push(orb);
+// });
+
+// // Raycasting for click detection
+// const raycaster = new THREE.Raycaster();
+// const mouse = new THREE.Vector2();
+
+// function onClick(event) {
+//   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+//   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+//   raycaster.setFromCamera(mouse, camera);
+
+//   const intersects = raycaster.intersectObjects(orbs);
+//   if (intersects.length > 0) {
+//     const targetOrb = intersects[0].object;
+//     animateCamera(targetOrb.position);
+//   }
+// }
+
+// function animateCamera(targetPosition) {
+//   gsap.to(camera.position, {
+//     x: targetPosition.x,
+//     y: targetPosition.y + 0.5, // Adjust for height offset
+//     z: targetPosition.z + 2, // Adjust for distance
+//     duration: 1.5,
+//     ease: "power3.inOut",
+//     onUpdate: () => controls.update(),
+//   });
+
+//   gsap.to(controls.target, {
+//     x: 0,
+//     y: 0.4,
+//     z: 0,
+//     duration: 1.5,
+//     ease: "power2.inOut",
+//     onUpdate: () => controls.update(), // Recalculate controls
+//   });
+// }
+
+// window.addEventListener('click', onClick);
 
 function createStars() {
   const starGeometry = new THREE.BufferGeometry();
@@ -211,11 +268,31 @@ function toggleGrid() {
   }
 };
 
+var sidebarOpen = false;
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const toggleButton = document.getElementById('toggle-sidebar');
+  sidebar.classList.toggle('open');
+  toggleButton.classList.toggle('open');
+
+  sidebarOpen = !sidebarOpen;
+  
+  if (sidebarOpen === false) {
+    sidebar.style.right = '-300px';
+    toggleButton.innerHTML = '&#9664;'; // Left arrow
+  } else {
+    sidebar.style.right = '0px';
+    toggleButton.innerHTML = '&#9658;'; // Right arrow
+  }
+}
+
 window.speedUp = speedUp;
 window.slowDown = slowDown;
 window.resetSun = resetSun;
 window.toggleGrid = toggleGrid;
 window.toggleSunMovement = toggleSunMovement;
+window.toggleSidebar = toggleSidebar;
 
 function animate() {
   requestAnimationFrame(animate);
