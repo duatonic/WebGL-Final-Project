@@ -35,7 +35,8 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.enablePan = false;
 controls.minDistance = 5;
-controls.maxDistance = 20;
+controls.maxDistance = 10;
+controls.maxPolarAngle = Math.PI/2
 
 const targetPoint = new THREE.Vector3(0, 0.4, 0);
 controls.target.copy(targetPoint);
@@ -67,10 +68,11 @@ const groundTexture = new THREE.TextureLoader().load('./textures/ground-plane.pn
   texture.repeat.set(10, 10);
   
   const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(10, 10),
+    new THREE.PlaneGeometry(50, 50),
     new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide })
   );
   plane.rotation.x = -Math.PI / 2;
+  plane.position.set(0, 0, 0)
   plane.receiveShadow = true;
   scene.add(plane);
 }, undefined, function(err) {
@@ -79,7 +81,7 @@ const groundTexture = new THREE.TextureLoader().load('./textures/ground-plane.pn
 
 // Load the GLTF model
 const loader = new GLTFLoader().setPath('models/');
-loader.load('scene1.gltf', (gltf) => {
+loader.load('Environment2.gltf', (gltf) => {
   const mesh = gltf.scene;
 
   mesh.traverse((child) => {
@@ -89,7 +91,7 @@ loader.load('scene1.gltf', (gltf) => {
     }
   });
 
-  mesh.position.set(0, 0, -0.5);
+  mesh.position.set(0, 0, 0);
   scene.add(mesh);
 
   document.getElementById('progress-container').style.display = 'none';
