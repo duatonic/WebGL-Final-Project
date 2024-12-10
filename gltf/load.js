@@ -48,7 +48,7 @@ const nightColor = new THREE.Color(0x000033); // Deep blue/black night sky
 
 // Sunlight
 const sunLight = new THREE.DirectionalLight(0xffffff, 1);
-sunLight.position.set(-100, 0, 0);
+sunLight.position.set(-100, 100, 50);
 sunLight.castShadow = true;
 scene.add(sunLight);
 
@@ -62,49 +62,94 @@ scene.add(moonLight);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Add ambient light with initial intensity
 scene.add(ambientLight);
 
-const groundTexture = new THREE.TextureLoader().load('./textures/ground-plane.png', function(texture) {
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(10, 10);
+// const groundTexture = new THREE.TextureLoader().load('./textures/ground-plane.png', function(texture) {
+//   texture.wrapS = THREE.RepeatWrapping;
+//   texture.wrapT = THREE.RepeatWrapping;
+//   texture.repeat.set(10, 10);
   
-  const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(50, 50),
-    new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide })
-  );
-  plane.rotation.x = -Math.PI / 2;
-  plane.position.set(0, 0, 0)
-  plane.receiveShadow = true;
-  scene.add(plane);
-}, undefined, function(err) {
-  console.error('An error happened while loading the texture.', err);
-});
+//   const plane = new THREE.Mesh(
+//     new THREE.PlaneGeometry(50, 50),
+//     new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide })
+//   );
+//   plane.rotation.x = -Math.PI / 2;
+//   plane.position.set(0, 0, 0)
+//   plane.receiveShadow = true;
+//   scene.add(plane);
+// }, undefined, function(err) {
+//   console.error('An error happened while loading the texture.', err);
+// });
 
 // Load the GLTF model
+
 const loader = new GLTFLoader().setPath('models/');
-loader.load('Environment2.gltf', (gltf) => {
-  const mesh = gltf.scene;
+const modelData = [
+    { name: 'rumah', url: 'rumahbaduy.gltf', position: [0, 0, 0] },
+    { name: 'plane', url: 'plane.gltf', position: [0, 0, 0] },
+    { name: 'serabut-atap', url: 'serabutatap.gltf', position: [0, 0, 0] },
+  ];
 
-  mesh.traverse((child) => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
+Promise.all(modelData.map(data => loader.loadAsync(data.url))).then(gltfs => {
+    gltfs.forEach((gltf, index) => {
+        const mesh = gltf.scene;
+        const { name, position } = modelData[index];
+
+        mesh.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+            }
+        });
+
+        mesh.name = name;
+        mesh.position.set(...position); // Use spread operator for position
+        scene.add(mesh);
+    });
+
+    ////////////////////
+    ///  GRASS MESH  ///
+    ////////////////////
+
+    const instanceNumber = 30000;
+    const dummy = new THREE.Object3D();
+
+    const geometry = new THREE.PlaneGeometry( 0.2, 1.3, 1, 4 );
+    geometry.translate( 0, 0, 0 ); // move grass blade geometry lowest point at 0.
+
+    const meshRumput = new THREE.InstancedMesh( geometry, leavesMaterial, instanceNumber );
+
+    meshRumput.traverse((child) => {
+        if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+        }
+    });
+    meshRumput.name = 'rumput';
+    scene.add( meshRumput );
+
+    // Position and scale the grass blade instances randomly.
+
+    for ( let i=0 ; i<instanceNumber ; i++ ) {
+
+      dummy.position.set(
+        ( Math.random() - 0.5 ) * 25,
+        0,
+        ( Math.random() - 0.5 ) * 25
+      );
+      
+      dummy.scale.setScalar( 0.2 + Math.random() * 0.2 );
+      
+      dummy.rotation.y = Math.random() * Math.PI;
+      
+      dummy.updateMatrix();
+      meshRumput.setMatrixAt( i, dummy.matrix );
+
     }
-  });
 
-  mesh.position.set(0, 0, 0);
-  scene.add(mesh);
-
-  document.getElementById('progress-container').style.display = 'none';
+    document.getElementById('progress-container').style.display = 'none';
 }, (xhr) => {
-  document.getElementById('progress').innerHTML = `LOADING ${Math.max(xhr.loaded / xhr.total, 1) * 100}/100`;
+    document.getElementById('progress').innerHTML = `LOADING ${Math.max(xhr.loaded / xhr.total, 1) * 100}/100`;
 }, (error) => {
-  console.error('An error happened', error);
-});
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+    console.error('An error happened', error);
 });
 
 // // Create white orbs
@@ -164,6 +209,111 @@ window.addEventListener('resize', () => {
 // }
 
 // window.addEventListener('click', onClick);
+
+//////////////////////
+/// GRASS MATERIAL ///
+//////////////////////
+
+let simpleNoise = `
+    float N (vec2 st) {
+        return fract( sin( dot( st.xy, vec2(12.9898,78.233 ) ) ) *  43758.5453123);
+    }
+    
+    float smoothNoise( vec2 ip ){
+    	vec2 lv = fract( ip );
+      vec2 id = floor( ip );
+      
+      lv = lv * lv * ( 3. - 2. * lv );
+      
+      float bl = N( id );
+      float br = N( id + vec2( 1, 0 ));
+      float b = mix( bl, br, lv.x );
+      
+      float tl = N( id + vec2( 0, 1 ));
+      float tr = N( id + vec2( 1, 1 ));
+      float t = mix( tl, tr, lv.x );
+      
+      return mix( b, t, lv.y );
+    }
+  `;
+
+const vertexShader = `
+  varying vec2 vUv;
+  uniform float time;
+  
+  ${simpleNoise}
+  
+	void main() {
+
+    vUv = uv;
+    float t = time * 2.;
+    
+    // VERTEX POSITION
+    
+    vec4 mvPosition = vec4( position, 1.0 );
+    #ifdef USE_INSTANCING
+    	mvPosition = instanceMatrix * mvPosition;
+    #endif
+    
+    // DISPLACEMENT
+    
+    float noise = smoothNoise(mvPosition.xz * 0.5 + vec2(0., t));
+    noise = pow(noise * 0.5 + 0.5, 2.) * 2.;
+    
+    // here the displacement is made stronger on the blades tips.
+    float dispPower = 1. - cos( uv.y * 3.1416 * 0.5 );
+    
+    float displacement = noise * ( 0.3 * dispPower );
+    mvPosition.z -= displacement;
+    
+    //
+    
+    vec4 modelViewPosition = modelViewMatrix * mvPosition;
+    gl_Position = projectionMatrix * modelViewPosition;
+
+	}
+`;
+
+const fragmentShader = `
+  varying vec2 vUv;
+  uniform float timeOfDay;
+  
+  void main() {
+  	vec3 baseColor = vec3(0.41, 1.0, 0.5); // Base grass color (bright green)
+    
+    // Adjust brightness based on timeOfDay
+    float brightness = mix(0.2, 1.0, timeOfDay); // Dark at night, bright at day
+    vec3 finalColor = baseColor * brightness;
+
+    // Add a gradient effect based on vUv.y if desired
+    float clarity = (vUv.y * 0.875) + 0.125;
+    gl_FragColor = vec4(finalColor * clarity, 1.0);
+  }
+`;
+
+const uniforms = {
+  time: { value: 0 },
+  timeOfDay: { value: 0.0 }
+}
+
+const leavesMaterial = new THREE.ShaderMaterial({
+	vertexShader,
+  fragmentShader,
+  uniforms,
+  side: THREE.DoubleSide
+});
+
+/// GRASS END ///
+
+function addEntity(object) {
+  var selectedObject = scene.getObjectByName(object.name);
+  scene.add( selectedObject );
+}
+
+function removeEntity(object) {
+  var selectedObject = scene.getObjectByName(object.name);
+  scene.remove( selectedObject );
+}
 
 function createStars() {
   const starGeometry = new THREE.BufferGeometry();
@@ -289,12 +439,26 @@ function toggleSidebar() {
   }
 }
 
+function toggleObject(objectName) {
+  const button = document.getElementById(`toggle-${objectName}`);
+  const object = scene.getObjectByName(objectName); // Get the object by name directly
+
+  if (object.visible) {  // Check visibility directly on the object
+      object.visible = false;
+      button.textContent = `Show ${objectName.charAt(0).toUpperCase() + objectName.slice(1)}`;
+  } else {
+      object.visible = true;
+      button.textContent = `Hide ${objectName.charAt(0).toUpperCase() + objectName.slice(1)}`;
+  }
+}
+
 window.speedUp = speedUp;
 window.slowDown = slowDown;
 window.resetSun = resetSun;
 window.toggleGrid = toggleGrid;
 window.toggleSunMovement = toggleSunMovement;
 window.toggleSidebar = toggleSidebar;
+window.toggleObject = toggleObject;
 
 function animate() {
   requestAnimationFrame(animate);
@@ -303,8 +467,15 @@ function animate() {
     elapsedTime += clock.getDelta() * timeSpeed;
     let angle = elapsedTime * 0.1;
 
-    sunLight.position.set(-100 * Math.cos(angle), 100 * Math.sin(angle), 100 * Math.sin(angle));
-    moonLight.position.set(100 * Math.cos(angle), -100 * Math.sin(angle), -100 * Math.sin(angle));
+    // Update grass shader time uniform
+    leavesMaterial.uniforms.time.value = clock.getElapsedTime();
+
+    // Calculate a timeOfDay value based on the sun's position
+    const normalizedSunHeight = Math.max(0, sunLight.position.y / 100); // 0.0 at night, 1.0 at noon
+    leavesMaterial.uniforms.timeOfDay.value = normalizedSunHeight;
+
+    sunLight.position.set(-100 * Math.cos(angle), 100 * Math.sin(angle), 50 * Math.sin(angle));
+    moonLight.position.set(100 * Math.cos(angle), -100 * Math.sin(angle), -50 * Math.sin(angle));
 
     sunLight.intensity = Math.max(0.1, sunLight.position.y / 100);
     moonLight.intensity = Math.max(0.1, moonLight.position.y / 100);
