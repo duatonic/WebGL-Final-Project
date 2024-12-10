@@ -48,10 +48,16 @@
           <h2>Model Control</h2>
           <div class="control-buttons">
               <button class="control-button" id="toggle-rumah" onclick="toggleObject('rumah')">Hide Rumah</button>
-              <button class="control-button" id="toggle-plane" onclick="toggleObject('plane')">Hide Plane</button>
               <button class="control-button" id="toggle-serabut-atap" onclick="toggleObject('serabut-atap')">Hide Serabut atap</button>
+              <button class="control-button" id="toggle-plane" onclick="toggleObject('plane')">Hide Plane</button>
               <button class="control-button" id="toggle-rumput" onclick="toggleObject('rumput')">Hide Rumput</button>
           </div>
+        </div>
+
+        <div class="control-section">
+          <h2>Volume Control</h2>
+              <input type="range" id="volumeSlider" style="width: 190px" min="0" max="1.5" step="0.01" value="1">
+          <span id="volumeValue">100%</span>
         </div>
 
         <!-- <div class="control-section">

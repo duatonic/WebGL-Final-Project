@@ -28,8 +28,52 @@ gridHelper.visible = false; // Hide the grid by default
 axesHelper.visible = false; // Hide the axes by default
 // End of Grid Visualization
 
+const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.3 );
+hemiLight.color.setHSL( 0.6, 1, 0.6 );
+hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+hemiLight.position.set( 0, 50, 0 );
+scene.add( hemiLight );
+
 const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 1000);
 camera.position.set(-5, 1.5, 2);
+
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+// Load the audio files
+const audioLoader = new THREE.AudioLoader();
+
+const morningSound = new THREE.Audio(listener);
+audioLoader.load('sounds/morning.mp3', (buffer) => {
+  morningSound.setBuffer(buffer);
+  morningSound.setLoop(true);
+  morningSound.setVolume(0); // Start muted
+  morningSound.play();
+});
+
+const afternoonSound = new THREE.Audio(listener);
+audioLoader.load('sounds/afternoon.mp3', (buffer) => {
+  afternoonSound.setBuffer(buffer);
+  afternoonSound.setLoop(true);
+  afternoonSound.setVolume(0); // Start muted
+  afternoonSound.play();
+});
+
+const eveningSound = new THREE.Audio(listener);
+audioLoader.load('sounds/evening.mp3', (buffer) => {
+  eveningSound.setBuffer(buffer);
+  eveningSound.setLoop(true);
+  eveningSound.setVolume(0); // Start muted
+  eveningSound.play();
+});
+
+const nightSound = new THREE.Audio(listener);
+audioLoader.load('sounds/night.mp3', (buffer) => {
+  nightSound.setBuffer(buffer);
+  nightSound.setLoop(true);
+  nightSound.setVolume(0); // Start muted
+  nightSound.play();
+});
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -48,7 +92,7 @@ const nightColor = new THREE.Color(0x000033); // Deep blue/black night sky
 
 // Sunlight
 const sunLight = new THREE.DirectionalLight(0xffffff, 1);
-sunLight.position.set(-100, 100, 50);
+sunLight.position.set(-100, 0, 0);
 sunLight.castShadow = true;
 scene.add(sunLight);
 
@@ -84,8 +128,8 @@ scene.add(ambientLight);
 const loader = new GLTFLoader().setPath('models/');
 const modelData = [
     { name: 'rumah', url: 'rumahbaduy.gltf', position: [0, 0, 0] },
-    { name: 'plane', url: 'plane.gltf', position: [0, 0, 0] },
     { name: 'serabut-atap', url: 'serabutatap.gltf', position: [0, 0, 0] },
+    { name: 'plane', url: 'plane.gltf', position: [0, 0, 0] },
   ];
 
 Promise.all(modelData.map(data => loader.loadAsync(data.url))).then(gltfs => {
@@ -112,7 +156,7 @@ Promise.all(modelData.map(data => loader.loadAsync(data.url))).then(gltfs => {
     const instanceNumber = 30000;
     const dummy = new THREE.Object3D();
 
-    const geometry = new THREE.PlaneGeometry( 0.2, 1.3, 1, 4 );
+    const geometry = new THREE.PlaneGeometry( 0.2, 1, 1, 4 );
     geometry.translate( 0, 0, 0 ); // move grass blade geometry lowest point at 0.
 
     const meshRumput = new THREE.InstancedMesh( geometry, leavesMaterial, instanceNumber );
@@ -261,7 +305,7 @@ const vertexShader = `
     noise = pow(noise * 0.5 + 0.5, 2.) * 2.;
     
     // here the displacement is made stronger on the blades tips.
-    float dispPower = 1. - cos( uv.y * 3.1416 * 0.5 );
+    float dispPower = 1. - cos( uv.y * 3.1416 * 0.2 );
     
     float displacement = noise * ( 0.3 * dispPower );
     mvPosition.z -= displacement;
@@ -356,6 +400,35 @@ function updateBackgroundColor() {
 }
 updateBackgroundColor();
 
+function updateSoundVolumes(timeOfDay) {
+  // Smooth volume transitions
+  const volume = document.getElementById('volumeSlider').value;
+  document.getElementById('volumeValue').textContent = `${Math.round(volume * 100)}%`;
+  let pastNoon = 0;
+  if (timeOfDay > 0.9 && pastNoon === 0) {
+    pastNoon = 1;
+  } else if (timeOfDay < -0.2 && pastNoon === 1) {
+    pastNoon = 0;
+  }
+  if (pastNoon === 1) { eveningSound.setVolume(0) }
+  else { morningSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay - 0.4) * 2) * volume)); }
+  afternoonSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay - 1) * 2) * 0.4) * volume);
+  if (pastNoon === 0) { eveningSound.setVolume(0) }
+  else { eveningSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay - 0.4) * 2) * 1.1) * volume); }
+  nightSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay + 0.3) * 2) * 1.8) * volume);
+}
+
+let sounds = [morningSound, afternoonSound, eveningSound, nightSound];
+let isMuted = false;
+
+function updateMuteState() {
+  isMuted = !isMuted;
+
+  sounds.forEach(sound => {
+    sound.setVolume(isMuted ? sound.getVolume() : 0);  // Muting/unmuting all sounds
+  });
+}
+
 // Add a lens flare to the sun
 const lensFlareTexture = new THREE.TextureLoader().load('./textures/lens-flare.png');
 const lensFlare = new Lensflare();
@@ -384,11 +457,13 @@ function toggleSunMovement() {
     sunResumeButton.hidden = false;
     sunPauseButton.hidden = true;
     paused = !paused;
+    updateMuteState()
   }
   else {
     sunResumeButton.hidden = true;
     sunPauseButton.hidden = false;
     paused = !paused;
+    updateMuteState()
     clock.getDelta();
     clock.start();
   }
@@ -397,8 +472,8 @@ function toggleSunMovement() {
 function resetSun() {
   elapsedTime = 0;
   timeSpeed = 0.1;
-  sunLight.position.set(-100, 0, 0);
-  moonLight.position.set(100, 0, 0);
+  sunLight.position.set(-100, 0, 50);
+  moonLight.position.set(100, 0, -50);
   updateBackgroundColor();
 }
 
@@ -473,6 +548,9 @@ function animate() {
     // Calculate a timeOfDay value based on the sun's position
     const normalizedSunHeight = Math.max(0, sunLight.position.y / 100); // 0.0 at night, 1.0 at noon
     leavesMaterial.uniforms.timeOfDay.value = normalizedSunHeight;
+
+    updateSoundVolumes(Math.max(-.3, sunLight.position.y / 100))
+    // console.log(Math.max(-.3, sunLight.position.y / 100))
 
     sunLight.position.set(-100 * Math.cos(angle), 100 * Math.sin(angle), 50 * Math.sin(angle));
     moonLight.position.set(100 * Math.cos(angle), -100 * Math.sin(angle), -50 * Math.sin(angle));

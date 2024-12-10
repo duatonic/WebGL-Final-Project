@@ -3,6 +3,10 @@
 		"generator":"Khronos glTF Blender I/O v4.3.47",
 		"version":"2.0"
 	},
+	"extensionsUsed":[
+		"KHR_materials_specular",
+		"KHR_materials_ior"
+	],
 	"scene":0,
 	"scenes":[
 		{
@@ -26,6 +30,14 @@
 	"materials":[
 		{
 			"doubleSided":true,
+			"extensions":{
+				"KHR_materials_specular":{
+					"specularFactor":0.013
+				},
+				"KHR_materials_ior":{
+					"ior":1
+				}
+			},
 			"name":"Material",
 			"normalTexture":{
 				"index":0
@@ -73,19 +85,19 @@
 	],
 	"images":[
 		{
-			"mimeType":"image/png",
-			"name":"aerial_grass_rock_nor_gl_2k",
-			"uri":"../textures/aerial_grass_rock_nor_gl_2k.png"
+			"mimeType":"image/jpeg",
+			"name":"Grass004_2K-JPG_NormalGL",
+			"uri":"../textures/Grass004_2K-JPG_NormalGL.jpg"
 		},
 		{
 			"mimeType":"image/jpeg",
-			"name":"aerial_grass_rock_diff_2k",
-			"uri":"../textures/aerial_grass_rock_diff_2k.jpg"
+			"name":"Grass004_2K-JPG_Color",
+			"uri":"../textures/Grass004_2K-JPG_Color.jpg"
 		},
 		{
 			"mimeType":"image/png",
-			"name":"aerial_grass_rock_rough_2k",
-			"uri":"../textures/aerial_grass_rock_rough_2k.png"
+			"name":"Grass004_2K-JPG_Roughness",
+			"uri":"../textures/Grass004_2K-JPG_Roughness.png"
 		}
 	],
 	"accessors":[
