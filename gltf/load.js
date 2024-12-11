@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
+import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 import gsap from "https://cdn.skypack.dev/gsap";
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -103,7 +104,7 @@ sunLight.castShadow = true;
 scene.add(moonLight);
 
 // Ambient light
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Add ambient light with initial intensity
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.1); // Add ambient light with initial intensity
 scene.add(ambientLight);
 
 // const groundTexture = new THREE.TextureLoader().load('./textures/ground-plane.png', function(texture) {
@@ -153,10 +154,10 @@ Promise.all(modelData.map(data => loader.loadAsync(data.url))).then(gltfs => {
     ///  GRASS MESH  ///
     ////////////////////
 
-    const instanceNumber = 30000;
+    const instanceNumber = 100000;
     const dummy = new THREE.Object3D();
 
-    const geometry = new THREE.PlaneGeometry( 0.2, 1, 1, 4 );
+    const geometry = new THREE.PlaneGeometry( 0.05, 0.7, 1, 8 );
     geometry.translate( 0, 0, 0 ); // move grass blade geometry lowest point at 0.
 
     const meshRumput = new THREE.InstancedMesh( geometry, leavesMaterial, instanceNumber );
@@ -172,23 +173,26 @@ Promise.all(modelData.map(data => loader.loadAsync(data.url))).then(gltfs => {
 
     // Position and scale the grass blade instances randomly.
 
-    for ( let i=0 ; i<instanceNumber ; i++ ) {
+    for ( let i = 0 ; i < instanceNumber ; i++ ) {
+      const radius = 13;
 
-      dummy.position.set(
-        ( Math.random() - 0.5 ) * 25,
-        0,
-        ( Math.random() - 0.5 ) * 25
-      );
-      
+      // Generate random polar coordinates
+      const angle = Math.random() * Math.PI * 2; // Random angle (0 to 2π)
+      const r = Math.sqrt(Math.random()) * radius; // Random radius (scaled to fit uniformly)
+
+      // Convert polar coordinates to Cartesian coordinates
+      const x = r * Math.cos(angle) * 0.9;
+      const z = r * Math.sin(angle);
+
+      dummy.position.set(x, 0, z);
+
       dummy.scale.setScalar( 0.2 + Math.random() * 0.2 );
-      
+
       dummy.rotation.y = Math.random() * Math.PI;
-      
+
       dummy.updateMatrix();
-      meshRumput.setMatrixAt( i, dummy.matrix );
-
-    }
-
+      meshRumput.setMatrixAt(i, dummy.matrix);
+  }
     document.getElementById('progress-container').style.display = 'none';
 }, (xhr) => {
     document.getElementById('progress').innerHTML = `LOADING ${Math.max(xhr.loaded / xhr.total, 1) * 100}/100`;
@@ -305,7 +309,7 @@ const vertexShader = `
     noise = pow(noise * 0.5 + 0.5, 2.) * 2.;
     
     // here the displacement is made stronger on the blades tips.
-    float dispPower = 1. - cos( uv.y * 3.1416 * 0.2 );
+    float dispPower = 1. - cos( uv.y * 3.1416 * 0.3 );
     
     float displacement = noise * ( 0.3 * dispPower );
     mvPosition.z -= displacement;
@@ -323,10 +327,10 @@ const fragmentShader = `
   uniform float timeOfDay;
   
   void main() {
-  	vec3 baseColor = vec3(0.41, 1.0, 0.5); // Base grass color (bright green)
+  	vec3 baseColor = vec3(0.855, 0.757, 0.533); // Base grass color (bright green)
     
     // Adjust brightness based on timeOfDay
-    float brightness = mix(0.2, 1.0, timeOfDay); // Dark at night, bright at day
+    float brightness = mix(0.2, 1.0, (timeOfDay * 0.5)); // Dark at night, bright at day
     vec3 finalColor = baseColor * brightness;
 
     // Add a gradient effect based on vUv.y if desired
@@ -411,11 +415,11 @@ function updateSoundVolumes(timeOfDay) {
     pastNoon = 0;
   }
   if (pastNoon === 1) { eveningSound.setVolume(0) }
-  else { morningSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay - 0.4) * 2) * volume)); }
-  afternoonSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay - 1) * 2) * 0.4) * volume);
+  else { morningSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay - 0.4) * 2.5) * volume)); }
+  afternoonSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay - 1) * 2.5) * 0.4) * volume);
   if (pastNoon === 0) { eveningSound.setVolume(0) }
-  else { eveningSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay - 0.4) * 2) * 1.1) * volume); }
-  nightSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay + 0.3) * 2) * 1.8) * volume);
+  else { eveningSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay - 0.4) * 2.5) * 1.1) * volume); }
+  nightSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay + 0.3) * 2.5) * 1.8) * volume);
 }
 
 let sounds = [morningSound, afternoonSound, eveningSound, nightSound];
@@ -551,14 +555,14 @@ function animate() {
 
     updateSoundVolumes(Math.max(-.3, sunLight.position.y / 100))
     // console.log(Math.max(-.3, sunLight.position.y / 100))
-
+    
     sunLight.position.set(-100 * Math.cos(angle), 100 * Math.sin(angle), 50 * Math.sin(angle));
     moonLight.position.set(100 * Math.cos(angle), -100 * Math.sin(angle), -50 * Math.sin(angle));
 
     sunLight.intensity = Math.max(0.1, sunLight.position.y / 100);
     moonLight.intensity = Math.max(0.1, moonLight.position.y / 100);
 
-    ambientLight.intensity = Math.max(0.2, sunLight.intensity);
+    ambientLight.intensity = Math.max(0.1, sunLight.intensity * 0.2);
 
     updateBackgroundColor();
   }
