@@ -1,3 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;700&display=swap');
+
+#progress-container {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(245, 230, 211, 0.9);
+    z-index: 1001;
+}
+
+#progress-box {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 3px solid #8B4513;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+#progress-box::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M0 0 L50 50 L0 100 Z" fill="%23f5e6d3" fill-opacity="0.1"/></svg>');
+    transform: rotate(45deg);
+    z-index: -1;
+}
+
+#progress {
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 3rem;
+    font-weight: bold;
+    color: #8B4513;
+    text-shadow: 2px 2px rgba(245, 230, 211, 0.5);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
 @font-face {
   font-family: 'Code';
   src: local('Code Light'), url(fonts/code_light.otf) format('otf');
@@ -12,71 +62,62 @@ body {
 #sidebar {
   position: fixed;
   top: 0;
-  right: -300px;
-  width: 300px;
+  right: -400px;
+  width: 400px;
   height: 100%;
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
+  background: linear-gradient(to bottom, 
+      rgba(210, 180, 140, 0.9), 
+      rgba(245, 230, 211, 0.9)
+  );
   transition: right 0.3s ease;
   z-index: 1000;
-  font-family: 'Code';
   overflow-y: auto;
+  box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+  border-left: 3px solid #8B4513;
 }
 
 #sidebar.open {
   right: 0;
 }
 
-#progress-container {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.8);
-  z-index: 1001;
-}
-
-#progress {
-  font-family: 'Code';
-  font-size: 48px;
-  font-weight: bold;
-  color: white;
-}
-
 #toggle-sidebar {
   position: fixed;
   top: 20px;
   right: 20px;
-  padding: 8px 12px;
-  font-size: 16px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  border: none;
-  cursor: pointer;
   z-index: 1001;
-  border-radius: 4px;
-  transition: all 0.3s ease; /* Changed to all for smoother animation */
+  background-color: #8B4513;
+  color: #f5e6d3;
+  border: 2px solid #f5e6d3;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
 }
 
 #toggle-sidebar.open {
-  right: 320px; /* 300px (sidebar width) + 20px (original right position) */
+  right: 420px; /* 300px (sidebar width) + 20px (original right position) */
 }
 
 #toggle-sidebar:hover {
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: #5a2e1b;
 }
 
 .control-section {
   padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(139, 69, 19, 0.2);
 }
 
 .control-section h2 {
   margin: 0 0 15px 0;
   font-size: 1.2em;
-  color: #fff;
+  color: #5a2e1b;
+  border-bottom: 2px solid #8B4513;
+  padding-bottom: 10px;
+  font-weight: bold;
 }
 
 .control-buttons {
@@ -86,48 +127,62 @@ body {
 }
 
 .control-button {
-  padding: 8px 16px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: white;
+  padding: 10px 16px;
+  background-color: rgba(245, 230, 211, 0.8);
+  border: 1px solid #8B4513;
+  color: #5a2e1b;
   cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  position: relative;
+  overflow: hidden;
+}
+
+.control-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+      120deg, 
+      transparent, 
+      rgba(139, 69, 19, 0.1), 
+      transparent
+  );
+  transition: all 0.5s;
+}
+
+.control-button:hover::before {
+  left: 100%;
 }
 
 .control-button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: #8B4513;
+  color: #f5e6d3;
+  transform: translateX(10px);
 }
 
 #info-section {
+  background-color: rgba(245, 230, 211, 0.7);
   padding: 20px;
+  border-radius: 10px;
+  margin: 20px;
+  border: 1px solid rgba(139, 69, 19, 0.2);
 }
 
 #info-section h1 {
   font-size: 1.5em;
   margin: 0 0 15px 0;
-  color: #fff;
-  align-items: center;
+  color: #5a2e1b;
+  border-bottom: 2px solid #8B4513;
+  padding-bottom: 10px;
+  font-weight: bold;
 }
 
 #info-section p {
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.8);
-  justify-content: center;
-}
-
-#progress-container {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-#progress {
-  font-family: 'Code';
-  font-size: 48px;
-  font-weight: bold;
-  color: white;
+  color: #4a3f35;
 }

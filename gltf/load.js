@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
+import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import gsap from "https://cdn.skypack.dev/gsap";
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -34,9 +35,11 @@ hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
 hemiLight.position.set( 0, 50, 0 );
 scene.add( hemiLight );
 
-const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 1000);
-camera.position.set(-5, 1.5, 2);
+let fov = 30;
 
+const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(-5, 1.5, 2);
+// camera.position.set(-5, 0.45, 0);
 const listener = new THREE.AudioListener();
 camera.add(listener);
 
@@ -82,6 +85,136 @@ const targetPoint = new THREE.Vector3(0, 0.4, 0);
 controls.target.copy(targetPoint);
 controls.update();
 
+let sidebarOpen = false;
+
+// FPS Camera Controls
+let isWalkMode = false;
+let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+let velocity = new THREE.Vector3();
+let direction = new THREE.Vector3();
+let FPSCamHeight = 0.45;
+
+const pointerLockControls = new PointerLockControls(camera, document.body);
+
+const movementSpeed = 1; // Adjust speed as necessary
+
+function onKeyDown(event) {
+  switch (event.code) {
+    case 'KeyW': moveForward = true; break;
+    case 'KeyS': moveBackward = true; break;
+    case 'KeyA': moveLeft = true; break;
+    case 'KeyD': moveRight = true; break;
+  }
+}
+
+function onKeyUp(event) {
+  switch (event.code) {
+    case 'KeyW': moveForward = false; break;
+    case 'KeyS': moveBackward = false; break;
+    case 'KeyA': moveLeft = false; break;
+    case 'KeyD': moveRight = false; break;
+  }
+}
+
+document.addEventListener('keydown', onKeyDown);
+document.addEventListener('keyup', onKeyUp);
+
+function toggleFPSCam() {
+  isWalkMode = !isWalkMode;
+
+  if (isWalkMode) {
+    // Enter Walk Mode
+    console.log('Entering walk mode');
+    gsap.to(camera.position, {
+      x: -5,
+      y: FPSCamHeight,
+      z: 0,
+      duration: 1.5,
+      ease: "power2.inOut",
+      onUpdate: () => {
+        camera.lookAt(0, 0.4, 0); // Keep focus on the target point
+      },
+      onComplete: () => {
+        pointerLockControls.lock();
+        controls.enabled = false;
+        document.getElementById('toggle-walkable-camera').textContent = "Exit Walk Mode";
+      }
+    });
+    
+    toggleSidebar();
+
+    gsap.to(camera, {
+      fov: 60,
+      duration: 1.5,
+      ease: "power2.inOut",
+      onUpdate: () => camera.updateProjectionMatrix(),
+    });
+
+  } else {
+    // Exit Walk Mode
+    console.log('Exiting walk mode');
+
+    const exitPosition = pointerLockControls.getObject().position.clone();
+    exitPosition.y = 1;
+
+    gsap.to(camera.position, {
+      x: exitPosition.x,
+      y: exitPosition.y,
+      z: exitPosition.z,
+      duration: 1.5,
+      ease: "power2.inOut",
+      onComplete: () => {
+        pointerLockControls.unlock();
+        controls.enabled = true;
+        document.getElementById('toggle-walkable-camera').textContent = "Enter Walk Mode";
+      }
+    });
+
+    toggleSidebar();
+
+    gsap.to(camera, {
+      fov: 30,
+      duration: 1.5,
+      ease: "power2.inOut",
+      onUpdate: () => camera.updateProjectionMatrix(),
+    });
+  }
+}
+
+document.getElementById('toggle-walkable-camera').addEventListener('click', toggleFPSCam);
+
+function updateWalkableCamera(deltaTime) {
+  if (!isWalkMode) return;
+
+  velocity.set(0, 0, 0);
+  direction.set(0, 0, 0);
+
+  // Determine movement direction
+  if (moveForward) direction.z -= 1;
+  if (moveBackward) direction.z += 1;
+  if (moveLeft) direction.x -= 1;
+  if (moveRight) direction.x += 1;
+
+  direction.normalize(); // Ensure consistent movement speed when moving diagonally
+  velocity.copy(direction).multiplyScalar(movementSpeed * deltaTime);
+
+  // Apply velocity to camera position
+  const deltaPosition = new THREE.Vector3().copy(velocity);
+  pointerLockControls.getObject().translateX(deltaPosition.x);
+  pointerLockControls.getObject().translateZ(deltaPosition.z);
+  pointerLockControls.getObject().position.y = FPSCamHeight;
+}
+
+document.addEventListener('pointerlockchange', () => {
+  const isLocked = document.pointerLockElement === document.body;
+  if (!isLocked && isWalkMode) {
+    // User pressed Escape, exit walk mode
+    toggleFPSCam();
+    document.getElementById('toggle-walkable-camera').textContent = "Enter Walk Mode";
+  }
+});
+// End of FPS Camera Controls
+
 const dawnColor = new THREE.Color(0xffcc99); // Warm dawn/sunset color
 const dayColor = new THREE.Color(0x87ceeb); // Bright blue daytime color
 const nightColor = new THREE.Color(0x000033); // Deep blue/black night sky
@@ -101,23 +234,6 @@ scene.add(moonLight);
 // Ambient light
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.1); // Add ambient light with initial intensity
 scene.add(ambientLight);
-
-// const groundTexture = new THREE.TextureLoader().load('./textures/ground-plane.png', function(texture) {
-//   texture.wrapS = THREE.RepeatWrapping;
-//   texture.wrapT = THREE.RepeatWrapping;
-//   texture.repeat.set(10, 10);
-  
-//   const plane = new THREE.Mesh(
-//     new THREE.PlaneGeometry(50, 50),
-//     new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide })
-//   );
-//   plane.rotation.x = -Math.PI / 2;
-//   plane.position.set(0, 0, 0)
-//   plane.receiveShadow = true;
-//   scene.add(plane);
-// }, undefined, function(err) {
-//   console.error('An error happened while loading the texture.', err);
-// });
 
 // Load the GLTF model
 
@@ -197,42 +313,6 @@ Promise.all(modelData.map(data => loader.loadAsync(data.url))).then(gltfs => {
     console.error('An error happened', error);
 });
 
-// // Create white orbs
-// const orbMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-// const orbGeometry = new THREE.SphereGeometry(0.05, 16, 16);
-// const orbs = [];
-
-// const orbPositions = [
-//   new THREE.Vector3(2, 1, -3),
-//   new THREE.Vector3(-3, 0.5, 1),
-//   new THREE.Vector3(1, 1.5, 4),
-//   new THREE.Vector3(-2, 0.5, -3)
-// ];
-
-// orbPositions.forEach(pos => {
-//   const orb = new THREE.Mesh(orbGeometry, orbMaterial);
-//   orb.position.copy(pos);
-//   scene.add(orb);
-//   orbs.push(orb);
-// });
-
-// // Raycasting for click detection
-// const raycaster = new THREE.Raycaster();
-// const mouse = new THREE.Vector2();
-
-// function onClick(event) {
-//   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-//   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-//   raycaster.setFromCamera(mouse, camera);
-
-//   const intersects = raycaster.intersectObjects(orbs);
-//   if (intersects.length > 0) {
-//     const targetOrb = intersects[0].object;
-//     animateCamera(targetOrb.position);
-//   }
-// }
-
 // function animateCamera(targetPosition) {
 //   gsap.to(camera.position, {
 //     x: targetPosition.x,
@@ -243,17 +323,15 @@ Promise.all(modelData.map(data => loader.loadAsync(data.url))).then(gltfs => {
 //     onUpdate: () => controls.update(),
 //   });
 
-//   gsap.to(controls.target, {
-//     x: 0,
-//     y: 0.4,
-//     z: 0,
-//     duration: 1.5,
-//     ease: "power2.inOut",
-//     onUpdate: () => controls.update(), // Recalculate controls
-//   });
+  // gsap.to(controls.target, {
+  //   x: 0,
+  //   y: 0.4,
+  //   z: 0,
+  //   duration: 1.5,
+  //   ease: "power2.inOut",
+  //   onUpdate: () => controls.update(), // Recalculate controls
+  // });
 // }
-
-// window.addEventListener('click', onClick);
 
 //////////////////////
 /// GRASS MATERIAL ///
@@ -439,6 +517,7 @@ let clock = new THREE.Clock();
 let elapsedTime = 0;
 let timeSpeed = 0.1;
 let paused = true;
+let deltaTime = 0;
 
 function speedUp() {
   timeSpeed *= 1.5;
@@ -494,8 +573,6 @@ function toggleGrid() {
   }
 };
 
-var sidebarOpen = false;
-
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const toggleButton = document.getElementById('toggle-sidebar');
@@ -505,11 +582,11 @@ function toggleSidebar() {
   sidebarOpen = !sidebarOpen;
   
   if (sidebarOpen === false) {
-    sidebar.style.right = '-300px';
-    toggleButton.innerHTML = '&#9664;'; // Left arrow
+    sidebar.style.right = '-400px';
+    toggleButton.innerHTML = '&#11164;'; // Left arrow
   } else {
     sidebar.style.right = '0px';
-    toggleButton.innerHTML = '&#9658;'; // Right arrow
+    toggleButton.innerHTML = '&#11166;'; // Right arrow
   }
 }
 
@@ -561,9 +638,10 @@ window.toggleObject = toggleObject;
 
 function animate() {
   requestAnimationFrame(animate);
+  deltaTime = clock.getDelta();
 
   if (!paused) {
-    elapsedTime += clock.getDelta() * timeSpeed;
+    elapsedTime += deltaTime * timeSpeed;
     let angle = elapsedTime * 0.1;
 
     // Update grass shader time uniform
@@ -587,7 +665,12 @@ function animate() {
     updateBackgroundColor();
   }
 
-  controls.update();
+  if (isWalkMode) {
+    updateWalkableCamera(deltaTime); // Update walkable camera only in walk mode
+  } else {
+    controls.update(); // Update OrbitControls only when not in walk mode
+  }
+
   renderer.render(scene, camera);
 }
 
