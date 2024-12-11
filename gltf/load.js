@@ -48,7 +48,6 @@ audioLoader.load('sounds/morning.mp3', (buffer) => {
   morningSound.setBuffer(buffer);
   morningSound.setLoop(true);
   morningSound.setVolume(0); // Start muted
-  morningSound.play();
 });
 
 const afternoonSound = new THREE.Audio(listener);
@@ -56,7 +55,6 @@ audioLoader.load('sounds/afternoon.mp3', (buffer) => {
   afternoonSound.setBuffer(buffer);
   afternoonSound.setLoop(true);
   afternoonSound.setVolume(0); // Start muted
-  afternoonSound.play();
 });
 
 const eveningSound = new THREE.Audio(listener);
@@ -64,7 +62,6 @@ audioLoader.load('sounds/evening.mp3', (buffer) => {
   eveningSound.setBuffer(buffer);
   eveningSound.setLoop(true);
   eveningSound.setVolume(0); // Start muted
-  eveningSound.play();
 });
 
 const nightSound = new THREE.Audio(listener);
@@ -72,7 +69,6 @@ audioLoader.load('sounds/night.mp3', (buffer) => {
   nightSound.setBuffer(buffer);
   nightSound.setLoop(true);
   nightSound.setVolume(0); // Start muted
-  nightSound.play();
 });
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -130,6 +126,7 @@ const modelData = [
     { name: 'rumah', url: 'bangunan-rumah.gltf', position: [0, 0, 0] },
     { name: 'atap', url: 'atap-rumah.gltf', position: [0, 0, 0] },
     { name: 'serabut-atap', url: 'serabutatap.gltf', position: [0, 0, 0] },
+    { name: 'pohon', url: 'plantation.gltf', position: [0, 0, 0] },
     { name: 'plane', url: 'plane.gltf', position: [0, 0, 0] },
   ];
 
@@ -422,14 +419,12 @@ function updateSoundVolumes(timeOfDay) {
   nightSound.setVolume((Math.max(0, 1 - Math.abs(timeOfDay + 0.3) * 2.5) * 1.8) * volume);
 }
 
-let sounds = [morningSound, afternoonSound, eveningSound, nightSound];
-let isMuted = false;
-
-function updateMuteState() {
-  isMuted = !isMuted;
+function updateSoundState(state) {
+  const sounds = [morningSound, afternoonSound, eveningSound, nightSound];
 
   sounds.forEach(sound => {
-    sound.setVolume(isMuted ? sound.getVolume() : 0);  // Muting/unmuting all sounds
+    if (state) { sound.play(); }  // Muting/unmuting all sounds
+    else { sound.pause(); }
   });
 }
 
@@ -461,13 +456,13 @@ function toggleSunMovement() {
     sunResumeButton.hidden = false;
     sunPauseButton.hidden = true;
     paused = !paused;
-    updateMuteState()
+    updateSoundState(0)
   }
   else {
     sunResumeButton.hidden = true;
     sunPauseButton.hidden = false;
     paused = !paused;
-    updateMuteState()
+    updateSoundState(1)
     clock.getDelta();
     clock.start();
   }

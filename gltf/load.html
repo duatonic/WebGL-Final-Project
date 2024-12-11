@@ -255,26 +255,27 @@
               <button class="control-button" onclick="resetSun()">Reset</button>
           </div>
       </div>
-
+      
       <div class="control-section">
-        <h2>Grid Control</h2>
+        <h2>Model Control</h2>
+        <div class="control-buttons">
+          <button class="control-button" id="toggle-rumah" onclick="toggleObject('rumah')">Hide Rumah</button>
+          <button class="control-button" id="toggle-atap" onclick="toggleObject('atap')">Hide Atap</button>
+          <button class="control-button" id="toggle-serabut-atap" onclick="toggleObject('serabut-atap')">Hide Serabut atap</button>
+          <button class="control-button" id="toggle-pohon" onclick="toggleObject('pohon')">Hide Pohon</button>
+          <button class="control-button" id="toggle-plane" onclick="toggleObject('plane')">Hide Plane</button>
+          <button class="control-button" id="toggle-rumput" onclick="toggleObject('rumput')">Hide Rumput</button>
+        </div>
+      </div>
+      
+      <div class="control-section">
+        <h2>Other</h2>
         <div class="control-buttons">
           <button class="control-button" id="show-grid" onclick="toggleGrid()">Show Grid</button>
           <button class="control-button" id="hide-grid" onclick="toggleGrid()" hidden>Hide Grid</button>
+          <button class="control-button" id="potato" onclick="toggleObject('rumput'); toggleObject('serabut-atap')">Potato PC Toggle</button>
         </div>
       </div>
-
-        <div class="control-section">
-          <h2>Model Control</h2>
-          <div class="control-buttons">
-              <button class="control-button" id="toggle-rumah" onclick="toggleObject('rumah')">Hide Rumah</button>
-              <button class="control-button" id="toggle-atap" onclick="toggleObject('atap')">Hide Atap</button>
-              <button class="control-button" id="toggle-serabut-atap" onclick="toggleObject('serabut-atap')">Hide Serabut atap</button>
-              <button class="control-button" id="toggle-plane" onclick="toggleObject('plane')">Hide Plane</button>
-              <button class="control-button" id="toggle-rumput" onclick="toggleObject('rumput')">Hide Rumput</button>
-          </div>
-        </div>
-
       <div class="control-section">
         <h2>Volume Control</h2>
             <input type="range" id="volumeSlider" style="width: 190px" min="0" max="1.5" step="0.01" value="1">
