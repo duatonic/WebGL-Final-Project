@@ -127,7 +127,8 @@ scene.add(ambientLight);
 
 const loader = new GLTFLoader().setPath('models/');
 const modelData = [
-    { name: 'rumah', url: 'rumahbaduy.gltf', position: [0, 0, 0] },
+    { name: 'rumah', url: 'bangunan-rumah.gltf', position: [0, 0, 0] },
+    { name: 'atap', url: 'atap-rumah.gltf', position: [0, 0, 0] },
     { name: 'serabut-atap', url: 'serabutatap.gltf', position: [0, 0, 0] },
     { name: 'plane', url: 'plane.gltf', position: [0, 0, 0] },
   ];
@@ -519,14 +520,39 @@ function toggleSidebar() {
 
 function toggleObject(objectName) {
   const button = document.getElementById(`toggle-${objectName}`);
-  const object = scene.getObjectByName(objectName); // Get the object by name directly
+  const object = scene.getObjectByName(objectName);
 
-  if (object.visible) {  // Check visibility directly on the object
-      object.visible = false;
-      button.textContent = `Show ${objectName.charAt(0).toUpperCase() + objectName.slice(1)}`;
-  } else {
-      object.visible = true;
-      button.textContent = `Hide ${objectName.charAt(0).toUpperCase() + objectName.slice(1)}`;
+  // Toggle the visibility of the current object
+  const newState = !object.visible;
+  object.visible = newState;
+  button.textContent = newState
+    ? `Hide ${objectName.charAt(0).toUpperCase() + objectName.slice(1)}`
+    : `Show ${objectName.charAt(0).toUpperCase() + objectName.slice(1)}`;
+
+  // Conditional logic for relationships
+  if (objectName === "rumah") {
+    // When "rumah" is toggled, "atap" and "serabut-atap" follow its visibility
+    const atap = scene.getObjectByName("atap");
+    const serabutAtap = scene.getObjectByName("serabut-atap");
+    atap.visible = newState;
+    serabutAtap.visible = newState;
+
+    // Update their buttons
+    document.getElementById("toggle-atap").textContent = newState
+      ? "Hide Atap"
+      : "Show Atap";
+    document.getElementById("toggle-serabut-atap").textContent = newState
+      ? "Hide Serabut Atap"
+      : "Show Serabut Atap";
+  } else if (objectName === "atap") {
+    // When "atap" is toggled, "serabut-atap" follows its visibility
+    const serabutAtap = scene.getObjectByName("serabut-atap");
+    serabutAtap.visible = newState;
+
+    // Update the button for "serabut-atap"
+    document.getElementById("toggle-serabut-atap").textContent = newState
+      ? "Hide Serabut Atap"
+      : "Show Serabut Atap";
   }
 }
 
