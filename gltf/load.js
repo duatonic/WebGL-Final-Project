@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Lensflare, LensflareElement } from 'three/addons/objects/Lensflare.js';
-import { InstancedMesh2 } from '@three.ez/instanced-mesh';
 import gsap from "https://cdn.skypack.dev/gsap";
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
